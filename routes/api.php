@@ -31,7 +31,8 @@ Route::group([
     Route::get('user/logout', [UserController::class, 'logout']);
     Route::get('user/', [UserController::class, 'getUser']);
     Route::post('user/upload-avatar', [UserController::class, 'uploadAvatar']);
-    Route::post('user/update-streak', [UserController::class, 'updateStreak']);
+    Route::get('user/delete-avatar', [UserController::class, 'deleteAvatar']);
+    Route::get('user/update-streak', [UserController::class, 'updateStreak']);
     Route::post('user/update', [UserController::class, 'updateUserDetails']);
     Route::post('user/change-password', [UserController::class, 'changePassword']);
     Route::post('user/delete', [UserController::class, 'deleteUser']);
@@ -49,12 +50,15 @@ Route::group([
     Route::post('chore/update', [ChoresController::class, 'updateChore']);
 
     Route::post('advice/', [AdviceController::class, 'getAdvice']);
-    Route::get('advice/all', [AdviceController::class, 'getAllAdvicesRandomizedByType']);
+    Route::get('advice/all', [AdviceController::class, 'getAllAdvicesByType']);
     Route::post('advice/add', [AdviceController::class, 'addAdvice']);
     Route::post('advice/delete', [AdviceController::class, 'deleteAdvice']);
 
     Route::post('clothe/add', [ClothesController::class, 'addClothe']);
     Route::get('clothe/', [ClothesController::class, 'getClothes']);
     Route::post('clothe/delete', [ClothesController::class, 'deleteClothe']);
+    Route::post('clothe/toggle', [ClothesController::class, 'toggleClothe']);
+    Route::post('clothe/update', [ClothesController::class, 'updateClothe']);
+    Route::get('clothe/generate', [ClothesController::class, 'generateLaundry']);
 
 });
