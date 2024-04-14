@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('advices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->string('user_id')->nullable();
             $table->string('type');
             $table->string('advice');
             $table->boolean('is_personal')->default(false);

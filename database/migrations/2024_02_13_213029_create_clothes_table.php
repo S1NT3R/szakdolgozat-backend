@@ -17,7 +17,8 @@ return new class extends Migration {
             $table->string('material');
             $table->string('type');
             $table->string('colorway');
-            $table->json('washing_instructions');
+            $table->json('washing_instructions')->nullable();
+            $table->integer('temperature')->default(30);
             $table->boolean('is_in_laundry')->default(false);
             $table->string('picture')->nullable();
             $table->softDeletes();
