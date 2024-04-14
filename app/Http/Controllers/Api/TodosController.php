@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TodoResource;
 use App\Models\Todos;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -44,10 +45,12 @@ class TodosController extends Controller
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'validation_error',
+                    'errors' => $e->errors(),
                 ], Response::HTTP_BAD_REQUEST);
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -68,14 +71,15 @@ class TodosController extends Controller
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'success',
-                'data' => [
-                    $todos
-                ],
+                'data' =>
+                    TodoResource::collection($todos),
+
             ], Response::HTTP_OK);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -114,10 +118,12 @@ class TodosController extends Controller
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'validation_error',
+                    'errors' => $e->errors(),
                 ], Response::HTTP_BAD_REQUEST);
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -152,10 +158,12 @@ class TodosController extends Controller
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'validation_error',
+                    'errors' => $e->errors(),
                 ], Response::HTTP_BAD_REQUEST);
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -198,10 +206,12 @@ class TodosController extends Controller
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'validation_error',
+                    'errors' => $e->errors(),
                 ], Response::HTTP_BAD_REQUEST);
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

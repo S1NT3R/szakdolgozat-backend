@@ -53,17 +53,20 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => Response::HTTP_BAD_REQUEST,
-                'message' => $e->getMessage()
+                'message' => 'validation_error',
+                'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         return response()->json([
             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-            'message' => 'unknown_error_exception'
+            'message' => 'unknown_error_exception',
+            'error' => 'unknown_error_exception'
         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
@@ -78,13 +81,22 @@ class UserController extends Controller
                 'password' => 'required'
             ])->validate();
 
-            $token = JWTAuth::attempt(['email' => $email, 'password' => $password], ['exp' => now()->addWeek()->timestamp]);
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'user_not_found'
+                ], Response::HTTP_OK);
+            }
+
+            $token = JWTAuth::attempt(['email' => $email, 'password' => $password]);
 
             if (!$token) {
                 return response()->json([
-                    'status' => Response::HTTP_UNAUTHORIZED,
+                    'status' => 400,
                     'message' => 'invalid_credentials'
-                ], Response::HTTP_UNAUTHORIZED);
+                ], Response::HTTP_OK);
             }
 
             return response()->json([
@@ -98,12 +110,14 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => Response::HTTP_BAD_REQUEST,
-                'message' => 'validation_error'
+                'message' => 'validation_error',
+                'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
 
         }
@@ -122,7 +136,8 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -132,17 +147,20 @@ class UserController extends Controller
         try {
             $user = $request->user();
 
+            $avatarUrl = $user->picture ? 'http://' . $_SERVER["HTTP_HOST"] . '/storage/' . $user->picture : null;
+
+            $user->picture = $avatarUrl;
+
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'successfully_retrieved_user',
-                'data' => [
-                    $user
-                ]
+                'data' => $user
             ], Response::HTTP_OK);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -151,14 +169,14 @@ class UserController extends Controller
     {
         try {
             $user = $request->user();
-            if ($user->picture == null && $request->file('picture') == null) {
+            if ($user->picture == null && $request->file('avatar') == null) {
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'no_picture_provided'
                 ], Response::HTTP_BAD_REQUEST);
             }
-            if (!$request->hasFile('picture') && $user->picture != null) {
-                Storage::delete($user->picture);
+            if (!$request->hasFile('avatar') && $user->picture != null) {
+                Storage::disk('public')->delete($user->picture);
                 $user->picture = null;
                 $user->save();
                 return response()->json([
@@ -166,18 +184,44 @@ class UserController extends Controller
                     'message' => 'picture_deleted'
                 ], Response::HTTP_OK);
             }
-            $path = Storage::putFile('picture', $request->file('picture'));
+            $path = Storage::disk('public')->putFile('picture', $request->file('avatar'));
             $user->picture = $path;
             $user->save();
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'successfully_updated_profile_picture',
-
             ], Response::HTTP_OK);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function deleteAvatar(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            if ($user->picture) {
+                Storage::delete($user->picture);
+                $user->picture = null;
+                $user->save();
+                return response()->json([
+                    'status' => Response::HTTP_OK,
+                    'message' => 'successfully_deleted_profile_picture',
+                ], Response::HTTP_OK);
+            }
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => 'no_picture_found',
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -206,7 +250,8 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -231,7 +276,8 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -256,7 +302,8 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -282,7 +329,8 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'unknown_error_exception'
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AdviceResource;
 use App\Models\Advices;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -19,29 +20,41 @@ class AdviceController extends Controller
         try {
             $type = $request->input('type');
             if ($type) {
-                $advice = Advices::where('type', $type)->inRandomOrder()->first();
+                $adviceQuery = Advices::where('type', $type)->inRandomOrder();
+                if ($adviceQuery->exists()) {
+                    $advice = $adviceQuery->first();
+                    return response()->json([
+                        'status' => Response::HTTP_OK,
+                        'message' => 'success: ' . $type,
+                        'data' => AdviceResource::collection($advice),
+                    ], Response::HTTP_OK);
+                }
+                // Handle the case where the query returns null
+            }
+            $adviceQuery = Advices::inRandomOrder();
+            if ($adviceQuery->exists()) {
+                $advice = $adviceQuery->first();
                 return response()->json([
                     'status' => Response::HTTP_OK,
-                    'message' => 'success: ' . $type,
-                    'data' => [
-                        $advice,
-                    ]
+                    'advice' => $advice,
                 ], Response::HTTP_OK);
             }
-            $advice = Advices::inRandomOrder()->first();
-            return response()->json([
-                'status' => Response::HTTP_OK,
-                'advice' => $advice,
-            ], Response::HTTP_OK);
+            // Handle the case where the query returns null
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+        return response()->json([
+            'status' => Response::HTTP_NOT_FOUND,
+            'message' => 'advice_not_found',
+        ], Response::HTTP_NOT_FOUND);
     }
 
-    public function getAllAdvicesRandomizedByType(): JsonResponse
+
+    public function getAllAdvicesByType(): JsonResponse
     {
         try {
             // Get all distinct types
@@ -49,24 +62,29 @@ class AdviceController extends Controller
 
             $result = [];
 
-            // For each type, get all advices of that type and randomize them
+            // For each type, get all advices of that type
             foreach ($types as $type) {
-                $advices = Advices::where('type', $type)->inRandomOrder()->get();
-                $result[$type] = $advices;
+                $advicesQuery = Advices::where('type', $type)->orderBy('advice', 'asc');
+                if ($advicesQuery->exists()) {
+                    $advices = $advicesQuery->get();
+                    foreach ($advices as $advice) {
+                        $result[] = new AdviceResource($advice);
+                    }
+                }
+                // Handle the case where the query returns null
             }
 
             // Return the result
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'success',
-                'data' => [
-                    $result
-                ],
+                'data' => $result,
             ], Response::HTTP_OK);
         } catch (Exception $e) {
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -98,10 +116,12 @@ class AdviceController extends Controller
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'validation_error',
+                    'errors' => $e->errors(),
                 ], Response::HTTP_BAD_REQUEST);
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -133,6 +153,7 @@ class AdviceController extends Controller
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'unknown_error_exception',
+                'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
