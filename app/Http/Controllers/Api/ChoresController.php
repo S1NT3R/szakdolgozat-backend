@@ -61,11 +61,19 @@ class ChoresController extends Controller
             $user_id = auth()->user()->id;
 
             if ($request->input('active')) {
-                $chores = Chores::where('user_id', $user_id)->where('is_completed', false)->get();
+                $chores = Chores::where('user_id', $user_id)
+                    ->where('is_completed', false)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             } elseif ($request->input('completed')) {
-                $chores = Chores::where('user_id', $user_id)->where('is_completed', true)->get();
+                $chores = Chores::where('user_id', $user_id)
+                    ->where('is_completed', true)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             } else {
-                $chores = Chores::where('user_id', $user_id)->get();
+                $chores = Chores::where('user_id', $user_id)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             }
 
             return response()->json([

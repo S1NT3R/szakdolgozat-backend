@@ -41,7 +41,7 @@ class UserController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => 'Successfully created user!'
+                'message' => 'success'
             ], Response::HTTP_OK);
         } catch (QueryException $e) {
             if ($e->errorInfo[1] == 1062) {
@@ -53,7 +53,7 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => Response::HTTP_BAD_REQUEST,
-                'message' => 'validation_error',
+                'message' => 'login_form_error',
                 'error' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
@@ -85,7 +85,7 @@ class UserController extends Controller
 
             if (!$user) {
                 return response()->json([
-                    'status' => 400,
+                    'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'user_not_found'
                 ], Response::HTTP_OK);
             }
@@ -94,7 +94,7 @@ class UserController extends Controller
 
             if (!$token) {
                 return response()->json([
-                    'status' => 400,
+                    'status' => Response::HTTP_BAD_REQUEST,
                     'message' => 'invalid_credentials'
                 ], Response::HTTP_OK);
             }

@@ -20,10 +20,12 @@ use Illuminate\Support\Facades\Route;
 
 //Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //    return $request->user();
+Route::post('advice/', [AdviceController::class, 'getAdvice']);
 //});
 
 Route::post('/user/login', [UserController::class, 'login']);
 Route::post('/user/register', [UserController::class, 'register']);
+Route::get('advice/all', [AdviceController::class, 'getAllAdvicesByType']);
 
 Route::group([
     'middleware' => ['jwt.auth']
@@ -49,8 +51,7 @@ Route::group([
     Route::post('chore/delete', [ChoresController::class, 'deleteChore']);
     Route::post('chore/update', [ChoresController::class, 'updateChore']);
 
-    Route::post('advice/', [AdviceController::class, 'getAdvice']);
-    Route::get('advice/all', [AdviceController::class, 'getAllAdvicesByType']);
+
     Route::post('advice/add', [AdviceController::class, 'addAdvice']);
     Route::post('advice/delete', [AdviceController::class, 'deleteAdvice']);
 

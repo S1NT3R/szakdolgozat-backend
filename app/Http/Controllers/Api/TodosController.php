@@ -61,11 +61,19 @@ class TodosController extends Controller
             $user_id = auth()->user()->id;
 
             if ($request->input('active')) {
-                $todos = Todos::where('user_id', $user_id)->where('is_completed', false)->get();
+                $todos = Todos::where('user_id', $user_id)
+                    ->where('is_completed', false)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             } elseif ($request->input('completed')) {
-                $todos = Todos::where('user_id', $user_id)->where('is_completed', true)->get();
+                $todos = Todos::where('user_id', $user_id)
+                    ->where('is_completed', true)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             } else {
-                $todos = Todos::where('user_id', $user_id)->get();
+                $todos = Todos::where('user_id', $user_id)
+                    ->whereDate('due_date', '>=', now())
+                    ->get();
             }
 
             return response()->json([
